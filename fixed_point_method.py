@@ -5,7 +5,7 @@ def g(x):
    return math.cos(x)
 
 #Implementation of the fixed point method
-def fixedPM(g, x0, tol, maxiter):
+def fixed_pm(g, x0, tol, maxiter):
    sol = x0
    i = 0
    oldsol = x0 + 2*tol
@@ -19,10 +19,7 @@ def fixedPM(g, x0, tol, maxiter):
    print(f"The algorithm went through {i} iterations.")
    return sol
 
-solution = fixedPM(g, 1, 1e-12, 100)
-print(solution)
-
-def fixedPointSystems(g, x0, nmax = 100, tol = 10**(-6)):
+def fixed_point_systems(g, x0, nmax = 100, tol = 10**(-6)):
    """
    Fixed point method for systems of equations in the form g(x) = x
 
@@ -48,8 +45,6 @@ def g1(x):
    out = np.array([-math.cos(x[0] + x[1]) / 3, math.sin(x[0] - x[1]) / 4])
    return out
 
-print(fixedPointSystems(g1 , np.array([0,0])))
-
 def g2(x):
    n = len(x)
    out = [0]*n
@@ -58,4 +53,120 @@ def g2(x):
       out[i] = (((-h**2))/(1+x[i]**2) + x[i + 1] + x[i - 1])/2
    return out
 
-print(fixedPointSystems(g2,np.array([0.05 for i in range(50)])))
+###############################################################
+
+def jacobi(A, b, x0, nmax = 100, tol = 10**(-6)):
+   """
+   Jacobi's iterative method for systems of equations. 
+
+   param A: Coefficient matrix (n x n). 
+   param b: Right-hand side vector of length n. 
+   param x0: Initial estimate vector of length n.
+   param nmax: Maximum number of iterations.
+   param tol: Tolerance for the difference between two iterations before convergence. 
+   """
+   n = len(A)
+   assert len(b) == n and len(x0) == n , "Dimensions do not match"
+
+   sol = x0
+   aux = np.add(sol, 2*tol)
+   iterations = 0
+
+   while ((iterations < nmax) and np.linalg.norm(sol - aux) > tol):
+      aux = np.copy(sol)
+      for i in range(n):
+         sum = np.dot(A[i],aux) - A[i,i] * aux[i]
+         sol[i] = (b[i] - sum) / A[i,i]
+      iterations += 1
+   
+   if iterations >= nmax:
+      print("Warning: Maximum number of iterations has been reached.")
+
+   return sol
+
+
+def guass_seidel(A, b, x0, nmax = 100, tol = 10**(-6)):
+   """
+   Solves Ax = b using Gauss-Seidel iterative method. 
+
+   param A: Coefficient matrix (n x n). 
+   param b: Right-hand side vector of length n. 
+   param x0: Initial estimate vector of length n.
+   param nmax: Maximum number of iterations.
+   param tol: Tolerance for the difference between two iterations before convergence. 
+   """
+   n = len(A)
+   assert len(b) == n and len(x0) == n, "Dimensions do not match"
+
+   sol = x0.copy()
+   aux = np.add(sol, 2*tol)
+
+   iterations = 0
+
+   while ((iterations < nmax) and np.linalg.norm(sol - aux) > tol):
+      aux = np.copy(sol)
+      for i in range(n):
+         sum = 0
+         for j in range(i):
+            sum += A[i,j] * sol[j]
+         for j in range(i + 1, n):
+            sum += A[i,j] * aux[j]
+         sol[i] = (b[i] - sum) / A[i,i]
+      iterations += 1
+   
+   if iterations >= nmax:
+      print("Warning: Maximum number of iterations has been reached.")
+
+   return sol
+
+def successive_over_relaxation(A, b, x0, w = 1.01, nmax = 1000, tol = 10**(-10)):
+   """
+   Solves the linear system Ax = b using Successive Over-Relaxation. 
+   Method that improves on Gauss-Seidel with the relaxation parameter.
+   
+   param A: Coefficient matrix (n x n). 
+   param b: Right-hand side vector of length n. 
+   param x0: Initial estimate vector of length n.
+   param w: Relaxation parameter.
+   param nmax: Maximum number of iterations.
+   param tol: Tolerance for the difference between two iterations before convergence. 
+   """
+   n = len(A)
+   assert len(b) == n and len(x0) == n, "Dimensions do not match"
+
+   x = x0.copy()
+   iterations = 0
+
+   while (iterations < nmax):
+      x_old = np.copy(x)
+      for i in range(n):
+         sum1 = np.dot(A[i, :i], x[:i])
+         sum2 = np.dot(A[i,i + 1:], x_old[i + 1:])
+         x_new_gs = (b[i] - sum1 - sum2) / A[i,i]
+
+         x[i] = (1 - w) * x_old[i] + w * x_new_gs
+      
+      if np.linalg.norm(x - x_old) < tol:
+         break
+
+      iterations += 1
+
+   return x
+
+n = 100
+A = np.zeros((n,n))
+
+#Create the diagonally dominant matrix
+for i in range(n):
+   A[i,i] = -2
+
+for i in range(n-1):
+   A[i,i + 1] = 1
+
+for i in range(1,n):
+   A[i,i - 1] = 1
+
+b = np.array([1 for i in range(n)])
+x0 = np.zeros(n)
+
+print(successive_over_relaxation(A,b,x0))

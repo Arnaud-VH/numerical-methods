@@ -134,24 +134,27 @@ def successive_over_relaxation(A, b, x0, w = 1.01, nmax = 1000, tol = 10**(-10))
    n = len(A)
    assert len(b) == n and len(x0) == n, "Dimensions do not match"
 
-   x = x0.copy()
+   sol = np.copy(x0)
+   aux = np.add(sol, 2*tol)
    iterations = 0
 
-   while (iterations < nmax):
-      x_old = np.copy(x)
+   while (iterations < nmax and np.linalg.norm(sol - aux) < tol):
+      aux = np.copy(sol)
       for i in range(n):
-         sum1 = np.dot(A[i, :i], x[:i])
-         sum2 = np.dot(A[i,i + 1:], x_old[i + 1:])
-         x_new_gs = (b[i] - sum1 - sum2) / A[i,i]
-
-         x[i] = (1 - w) * x_old[i] + w * x_new_gs
-      
-      if np.linalg.norm(x - x_old) < tol:
-         break
-
+         sum = 0
+         for j in range(i):
+            sum += A[i,j] * sol[j]
+         for j in range(i + 1, n):
+            sum += A[i,j] * aux[j]
+         sol[i] = (b[i] - sum) / A[i,i]
       iterations += 1
 
-   return x
+      sol = (1 - w) * aux + w * sol
+
+   if iterations >= nmax:
+      print("Warning: Maximum number of iterations has been reached.")
+
+   return sol
 
 n = 100
 A = np.zeros((n,n))

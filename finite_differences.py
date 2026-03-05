@@ -25,5 +25,29 @@ for i in range(1,n-1):
 dy[0] = (-3*y[0] + 4*y[1] - y[2]) / (2*h)
 dy[-1] = (3*y[-1] - 4*y[-2] + y[-3]) / (2*h)
 
-plt.plot(x,dy)
+#plt.plot(x,dy)
+#plt.show()
+
+###### Example for linear differential equations  ######
+###### Solving y'' + y = 0, y(0) = 0, y(pi/2) = 1 ######
+n = 100
+x = np.linspace(0,math.pi/2, n)
+h = x[1] - x[0]
+
+ex = [math.sin(u) for u in x]
+
+A = np.identity((n))
+rhs = np.zeros((n))
+
+for i in range(1, n-1):
+   A[i,i] = (-2 + h**2)
+   A[i,i + 1] = 1
+   A[i,i - 1] = 1
+
+rhs[-1] = 1
+
+sol = np.linalg.solve(A,rhs)
+
+#Plot the error
+plt.plot(x,ex-sol)
 plt.show()
